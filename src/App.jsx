@@ -1,27 +1,51 @@
-import ContactForm from "./components/ContactForm/ContactForm";
-import SearchBox from "./components/SearchBox/SearchBox";
-import ContactList from "./components/ContactList/ContactList";
-import Loader from "./components/Loader/Loader";
-import "./App.css";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { selectLoader } from "./redux/contactsSlice";
-import { fetchContacts } from "./redux/contactsOps";
+import './App.css';
+import Layout from './components/Layout/Layout';
+import HomePage from './pages/HomePage/HomePage';
+import { Route, Routes } from 'react-router-dom';
+import RegistrationPage from './pages/RegistrationPage/RegistrationPage';
+import ContactsPage from './pages/ContactsPage/ContactsPage';
+import LoginPage from './pages/LoginPage/LoginPage';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { refreshUser } from './redux/auth/operations';
+import { selectAuthIsRefreshing } from './redux/auth/selectors';
+import { RestrictedRoute } from './components/RestrictedRoute';
+import { PrivateRoute } from './components/PrivateRoute';
+import NotFound from './components/NotFound/NotFound.jsx';
 
 const App = () => {
+  
   const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(fetchContacts());
-  }, [dispatch]);
-  const isLoading = useSelector(selectLoader);
+  const isRefreshing = useSelector(selectAuthIsRefreshing);
 
+  useEffect(() => {
+    dispatch(refreshUser());
+  }, [dispatch]);
+
+  if (isRefreshing) return <p>User is refreshing.</p>
+  
   return (
     <>
-      <h1 className="main-title">Phonebook</h1>
-      <ContactForm />
-      <SearchBox />
-      {isLoading && <Loader />}
-      <ContactList />
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+
+          <Route
+            path="/contacts"
+            element={<PrivateRoute component={<ContactsPage />} />}
+          />
+
+          <Route
+            path="/login"
+            element={<RestrictedRoute component={<LoginPage />} />}
+          />
+          <Route
+            path="/register"
+            element={<RestrictedRoute component={<RegistrationPage />} />}
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Layout>
     </>
   );
 };
